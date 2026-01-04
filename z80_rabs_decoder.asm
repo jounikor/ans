@@ -2,6 +2,8 @@
 ; 
 ; v0.1 (c) 2026 Jouni 'Mr.Spiv' Korhonen
 ; THIS IS STILL WORK IN PROGRESS..
+; Ugly but seems to work, which is the main goal as a starter. Next
+; to tinker the heck out of it..
 ;
 ; To assemble:
 ;  pasmo -d -1 --tapbas --alocal z80_rabs_decoder.asm tst.tap tst.map
@@ -34,7 +36,47 @@ UPDATE_RATE_MASK_	equ	0x7		; remining bits after the right shift
 ;
 ;
 
+NUM_SYMBOLS			equ	34
+INIT_STATE			equ	$b230
+
 main:
+		ld		hl,decoded_end-1
+		ld		de,encoded_end-1
+		exx
+		ld		bc,NUM_SYMBOLS
+		exx
+
+;-----------------------------------------------------------------------------
+; Init rABS decoder
+
+		ex		af,af'
+		ld		a,$80
+		ex		af,af'
+		push	hl
+		ld		a,(de)
+		ld		h,a
+		dec		de
+		ld		a,(de)
+		ld		l,a
+		dec		de
+		ld		a,INIT_PROP_FOR_0_
+		ex		(sp),hl
+
+_decoding_loop:
+		ex		(sp),hl
+		call	decode_symbol
+		jr nc,	_symbol_1
+		ld		b,1
+_symbol_1:
+		ex		(sp),hl
+		ld		(hl),b
+		dec		hl
+		call	update_propability
+		exx
+		dec		c
+		exx
+		jr nz,	_decoding_loop
+		pop		hl
 
 		ret
 ;
@@ -48,6 +90,7 @@ main:
 ;   C_flag = 0 or 1 for the symbol
 ;    A = frequency/propability of 0 symbol
 ;   A' = bitbuffer
+;    B = 0
 ;   HL = new_state
 ;   DE = possibly updated ptr to compressed file
 ;
@@ -140,8 +183,8 @@ _end_while:
 ;
 update_propability:
 		ld		b,a
-		jr c,	_symbol_1
-_symbol_0:
+		jr nc,	_symbol_0
+_symbol_1:
 		; M - A == -A, since M = 0x100 i.e. 0x00
 		neg
 
@@ -164,7 +207,7 @@ _not_zero_0:
 		ret nz
 		ld		a,1
 		ret
-_symbol_1:
+_symbol_0:
 		IF		UPDATE_RATE_ > 4
 		REPT	8-UPDATE_RATE_
 		rlca
@@ -183,5 +226,28 @@ _not_zero_1:
 		ret nc
 		ld		a,M_-1
 		ret
+
+
+;-----------------------------------------------
+;
+; These are just for testing purposes..
+;
+; output..
+; 0,0,0,0,0,0,0,0,  0,0,0,1,0,1,1,1, 1,0,0,1,1,1,1,1, 0,1,0,0,0,1,0,1,   1, 0, 1, 1, 0, 1, 1, 0
+
+		;db	00000000b,00010111b,10011111b,01000101b,10110110b
+		; Also bits must be reversed for our decoder to work as bits are output with left shift
+		db	00000000b,11101000b,11111001b,10100010b,01101101b
+		dw	INIT_STATE
+encoded_end:
+
+; Original input 34 symbols
+; [0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0]
+
+		db	$ff,$ff
+		ds	NUM_SYMBOLS
+decoded_end:
+
+
 
 		END	main

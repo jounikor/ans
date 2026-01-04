@@ -168,6 +168,8 @@ def decode(out: [],state: int, prop_of_0: int) -> (int,int):
         b = out.pop() & L_BITS_MASK
         new_state = (new_state << L_BITS) | b
 
+    print(f"state: 0x{state:04x} -> 0x{new_state:04x}")
+
     return symbol,new_state
 
 #
