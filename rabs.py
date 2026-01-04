@@ -53,7 +53,7 @@
 # M must be a power of two.. and in this case also fixed to 256
 M = 256
 assert (M & (M - 1)) == 0, "M is not a power of 2"
-assert M <= 256, "M must be 256"
+assert M == 256, "M must be 256"
 
 # L can be selected so that we can check against a 16-bit register sign bit.
 # The state must always reside between [L_BIT_LOW,0xffff] 
@@ -67,7 +67,7 @@ assert L_BITS < 8, "L_BITS must be less than 8"
 
 # Initial propabiliry of 0.5
 INIT_PROP_FOR_0 = 128
-assert INIT_PROP_FOR_0 > 0, "INIT_PROP_FOR_0 must be greater than 1"
+assert INIT_PROP_FOR_0 > 0, "INIT_PROP_FOR_0 must be greater than 0"
 assert INIT_PROP_FOR_0 < 256, "INIT_PROP_FOR_0 must be less than 256"
 
 # Throttle model update rate. Must be a power of two.
@@ -199,6 +199,7 @@ if (__name__ == "__main__"):
 		state = encode(out,state,symbol,prop_of_0)
 
 	print(f"Final state: 0x{state:x}")
+	print("Output after encoding:")
 	print(f"o:",out)
 
 	# Decode from end to start.. state is the final and propabiloity we
@@ -212,9 +213,9 @@ if (__name__ == "__main__"):
 		O.insert(0,symbol)
 		prop_of_0 = update_propability(prop_of_0,symbol)
 
-	print("Decoded")
+	print("Decoded:")
 	print(f"O:", O)
-	print("Original input")
+	print("Original input:")
 	print(f"S:", S)
 
 #/* vim: set tabstop=4:softtabstop=4:shiftwidth=4:noexpandtab */
