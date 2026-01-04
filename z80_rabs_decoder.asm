@@ -61,25 +61,31 @@ main:
 		dec		de
 		ld		a,INIT_PROP_FOR_0_
 		ex		(sp),hl
-
+		;
+		; Registers:
+		;  HL   = ptr to destination
+		;  DE   = ptr to compressed data
+		;  BC'  = counter how many symbols to decode
+		;  A'   = bitbuffer
+		;   A   = propability of 0
+		;  (SP) = state
+		;
 _decoding_loop:
 		ex		(sp),hl
 		call	decode_symbol
-		jr nc,	_symbol_1
-		ld		b,1
-_symbol_1:
+		call	update_propability
 		ex		(sp),hl
 		ld		(hl),b
 		dec		hl
-		call	update_propability
 		exx
 		dec		c
 		exx
 		jr nz,	_decoding_loop
 		pop		hl
-
 		ret
-;
+
+
+;-----------------------------------------------------------------------------
 ; Input:
 ;  HL = state
 ;  DE = ptr to compressed file
@@ -170,21 +176,24 @@ _end_while:
 		ret
 
 
-;
+;-----------------------------------------------------------------------------
 ; Input:
 ;  C_flag = symbol (0 or 1)
 ;  A = symbol propability/frequency
+;  B = 0
 ;
 ; Return:
 ;  A = Updated propability/frequency
+;  B = symbol
 ;
 ; Trashes:
-;  B
+;  C
 ;
 update_propability:
-		ld		b,a
+		ld		c,a
 		jr nc,	_symbol_0
 _symbol_1:
+		inc		b
 		; M - A == -A, since M = 0x100 i.e. 0x00
 		neg
 
@@ -202,7 +211,7 @@ _symbol_1:
 		jr nz,	_not_zero_0
 		ld		a,1
 _not_zero_0:
-		sub		b
+		sub		c
 		neg
 		ret nz
 		ld		a,1
@@ -222,7 +231,7 @@ _symbol_0:
 		jr nz,	_not_zero_1
 		ld		a,1
 _not_zero_1:
-		add		a,b
+		add		a,c
 		ret nc
 		ld		a,M_-1
 		ret
@@ -247,6 +256,7 @@ encoded_end:
 		db	$ff,$ff
 		ds	NUM_SYMBOLS
 decoded_end:
+		db	$ff,$ff
 
 
 
