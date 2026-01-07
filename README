@@ -29,3 +29,10 @@ function for building L- and Y-value decoding tables. The implementation
 currently is 84 bytes, excluding L- and Y-tables.
 
   z80_tans_decoder.asm
+
+The following z80 assembly file imolements a rABS decoder and a simple
+dynamic model for propabilities. The implementation currently is 88
+bytes, and nood for additional tables (due to simple context model).
+
+  z80_rabs_decoder.asm
+

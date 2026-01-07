@@ -110,12 +110,13 @@ decode_symbol:
 _not_zero:
 		push	af
 		push	de
+		ld		d,0
 		jr c,	_symbol_1
 
 _symbol_0:
 		; Fs = prop_of_0
 		; Is = 0
-		ld		c,0
+		ld		c,d
 		jr		_new_state
 
 _symbol_1:
@@ -143,7 +144,6 @@ _new_state:
 		;
 _umulHxE_HL:
 		ld		b,8
-		ld		d,0
 		ld		l,d
 _mul_loop:
 		add		hl,hl
@@ -246,6 +246,7 @@ _not_zero_1:
 
 		;db	00000000b,00010111b,10011111b,01000101b,10110110b
 		; Also bits must be reversed for our decoder to work as bits are output with left shift
+encoded_sta:
 		db	00000000b,11101000b,11111001b,10100010b,01101101b
 		dw	INIT_STATE
 encoded_end:
