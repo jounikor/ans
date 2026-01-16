@@ -18,11 +18,15 @@ and decoder template classes. These classes are purposely designed to mimic
 low spec target platforms - read 8-bit systems.
 
   tans.cpp - An example driver program for encoding/decoding.
-  ans.h - The base class for encoder/decoder template classes.
-  tans_encoder.h - tANS encoder template class.
-  tans_decoder.h - tANS decoder templets class that does NOT use k-table.
+  ans.h            - The base class for encoder/decoder template classes.
+  tans_encoder.h   - tANS encoder template class.
+  tans_decoder.h   - tANS decoder templets class that does NOT use k-table.
   tans_decoder_k.h - tANS decoder templete class that uses k-table.
-  trace.h - Some tracing macros.
+  trace.h          - Some tracing macros.
+  rice_encoder.h   - Both Rice-Golomb and plain Rice encoder templates that
+                     I have used to encode tANS symbol frequencies into the
+					 output file. 
+
 
 The following Z80 assembly file implements a tANS decoder and a required
 function for building L- and Y-value decoding tables. The implementation 
