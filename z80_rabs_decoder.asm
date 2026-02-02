@@ -111,19 +111,19 @@ _not_zero:
 		push	af
 		push	de
 		ld		d,0
-		jr c,	_symbol_1
-
-_symbol_0:
-		; Fs = prop_of_0
-		; Is = 0
-		ld		c,d
-		jr		_new_state
+		jr nc,	_symbol_0
 
 _symbol_1:
 		; Fs = M - prop_of_0
 		; Is = prop_of_0
 		ld		c,a
 		neg
+		db		$fe	
+_symbol_0:
+		; Fs = prop_of_0
+		; Is = 0
+		ld		c,d
+
 _new_state:
 		ld		e,a
 		ld		a,l
