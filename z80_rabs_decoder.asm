@@ -89,8 +89,8 @@ _decoding_loop:
 ; Input:
 ;  HL = state
 ;  DE = ptr to compressed file
-;   A = frequency/propability of 0 symbol
-;  A' = bit buffer
+;   A = frequency/propability of 0
+;  A' = input bit buffer
 ;
 ; Return:
 ;   C_flag = 0 or 1 for the symbol

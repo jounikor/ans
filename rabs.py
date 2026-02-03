@@ -60,10 +60,10 @@ assert M == 256, "M must be 256"
 # The L_BITS defines how many bits are output/input at once.
 # TODO: If 16-bit overflow can be used in case of L_BIT_LOW and state
 #       maintenance? That would be good for 8-bit CPU targets.
-L_BITS = 1
+L_BITS = 8
 L_BITS_MASK = (1 << L_BITS) - 1
 L_BIT_LOW = 0x10000 >> L_BITS
-assert L_BITS < 8, "L_BITS must be less than 8"
+assert L_BITS <= 8, "L_BITS must not be greater than 8"
 
 # Initial propabiliry of 0.5
 INIT_PROP_FOR_0 = 128
@@ -115,7 +115,9 @@ def encode(out: [],state: int, symbol: int, prop_of_0: int ) -> int:
 	# Fi = a symbol propability/frequency
 	# Ci = cumulative propability/frequency for a synbol
 
-	state_max = ((L_BIT_LOW // M) << L_BITS) * Fi
+	#state_max = ((L_BIT_LOW // M) << L_BITS) * Fi
+	state_max = ((L_BIT_LOW << L_BITS) // M) * Fi
+	print(f"state max: {state_max}")
 	while (state >= state_max):
 		out.append(state & L_BITS_MASK)
 		state >>= L_BITS
