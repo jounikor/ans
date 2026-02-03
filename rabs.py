@@ -117,7 +117,7 @@ def encode(out: [],state: int, symbol: int, prop_of_0: int ) -> int:
 
 	#state_max = ((L_BIT_LOW // M) << L_BITS) * Fi
 	state_max = ((L_BIT_LOW << L_BITS) // M) * Fi
-	print(f"state max: {state_max}")
+	print(f"state max: {state_max}, L_BIT_LOW: {L_BIT_LOW}")
 	while (state >= state_max):
 		out.append(state & L_BITS_MASK)
 		state >>= L_BITS
