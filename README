@@ -1,11 +1,12 @@
 (c) 2025-26 Jouni 'Mr.Spiv' Korhonen
 
-Version 0.3
+Version 0.4
 
 NOTE! Testing has been minimal so there MAY BE bugs around.
 
-Visit my blog about these ANS experiments:
+Visit my blogs about these ANS experiments:
 https://spiverman.blogspot.com/2026/02/ans-experimentations-for-8-bit-systems.html
+https://spiverman.blogspot.com/2026/02/rabs-with-byte-size-input-in-z80-in-my.html
 
 The three following Python3 programs implement my ANS ancoders/decoders. These
 are simple and should be very readable, since they were implemented for my
@@ -44,9 +45,10 @@ bytes, and nood for additional tables (due to simple context model).
 
   z80_rabs_decoder.asm
 
-There's also a byte-wise version of rABS Z80 decoder. This is smaller
-and faster than basic 1-bit at time decoder.
+There are also a byte-wise version of rABS Z80 decoder. They both are
+smaller than basic 1-bit at time decoder. The size optimized version
+has a brute force multiplication..
 
   z80_rabs_byte_decoder.asm
-
+  z80_rabs_byte_decoder_sizeopt.asm 
 
