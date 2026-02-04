@@ -1,7 +1,7 @@
 ;-----------------------------------------------------------------------------
 ; 
-; v0.1 (c) 2026 Jouni 'Mr.Spiv' Korhonen
-; Byte input version.
+; v0.2 (c) 2026 Jouni 'Mr.Spiv' Korhonen
+; Byte-wise input version.
 ;
 ; To assemble:
 ;  pasmo -d -1 --tapbas --alocal z80_rabs_decoder.asm tst.tap tst.map
@@ -17,8 +17,8 @@
 M_					equ	256
 M_BITS_				equ	8
 
-; with 8 bits the L_BIT_LOW becomes 0x0100, which allows byte input for
-; new state.
+; with 8 bits the L_BIT_LOW becomes 0x0100, which allows byte-wise input
+; from the compressed data stream during state renormalization.
 L_BITS_				equ	8
 L_BIT_LOW_			equ	0x10000 >> L_BITS_
 
@@ -38,8 +38,7 @@ NUM_SYMBOLS			equ	34
 INIT_STATE			equ	$0303
 
 main:
-		ld		hl,decoded_end-1
-		ld		de,encoded_end-1
+		ld		hl,encoded_end-1
 		exx
 		ld		bc,NUM_SYMBOLS
 		exx
@@ -47,122 +46,116 @@ main:
 ;-----------------------------------------------------------------------------
 ; Init rABS decoder
 
-		push	hl
-		ld		a,(de)
-		ld		h,a
-		dec		de
-		ld		a,(de)
-		ld		l,a
-		dec		de
+		ld		d,(hl)
+		dec		hl
+		ld		e,(hl)
+		dec		hl
 		ld		a,INIT_PROP_FOR_0_
-		ex		(sp),hl
+		ld		(state_x),de
+		ld		de,decoded_end-1
 		;
 		; Registers:
-		;  HL   = ptr to destination
-		;  DE   = ptr to compressed data
+		;  DE   = ptr to destination
+		;  HL   = ptr to compressed data
 		;  BC'  = counter how many symbols to decode
 		;   A   = propability of 0
 		;  (SP) = state
 		;
 _decoding_loop:
-		ex		(sp),hl
+		push	de
+		ld		de,(state_x)
 		call	decode_symbol
+		ld		(state_x),de
 		call	update_propability
-		ex		(sp),hl
-		ld		(hl),b
-		dec		hl
+		pop		de
+		push	af
+		ld		a,b
+		ld		(de),a
+		dec		de
+		pop		af
 		exx
 		dec		c
 		exx
 		jr nz,	_decoding_loop
-		pop		hl
 		ret
+
+state_x:
+		dw		0
 
 
 ;-----------------------------------------------------------------------------
 ; Input:
-;  HL = state
-;  DE = ptr to compressed file
-;   A = frequency/propability of 0
+;  DE = state
+;  HL = ptr to compressed file
+;   A = frequency/propability of symbol 0
 ;
 ; Return:
 ;   C_flag = 0 or 1 for the symbol
 ;    A = frequency/propability of 0 symbol
 ;    B = 0
-;   HL = new_state
-;   DE = possibly updated ptr to compressed file
+;   DE = new_state
+;   HL = possibly updated ptr to compressed file
 ;
 ; Trashes:
 ;   B,C
 decode_symbol:
-		cp		l
-		jr nz,	_not_zero
-		; handle special case L == A
-		scf
+		cp		e						; 1
+		jr nz,	_not_zero				; 2
+		; handle special case E == A
+		scf								; 1
 _not_zero:
-		push	af
-		push	de
-		ld		d,0
-		jr nc,	_symbol_0
+		push	af						; 1
+		push	hl						; 1
+		ld		b,0						; 2
+		jr nc,	_symbol_0				; 2
 
 _symbol_1:
-		; Fs = M - prop_of_0
-		; Is = prop_of_0
-		ld		c,a
-		neg
-		db		$fe	
+		; A = Fs = M - prop_of_0
+		; C = Is = prop_of_0
+		ld		c,a						; 1
+		neg								; 2
+		db		$fe						; 1
 _symbol_0:
-		; Fs = prop_of_0
-		; Is = 0
-		ld		c,d
-
+		; A = Fs = prop_of_0
+		; C = Is = 0
+		ld		c,b						; 1
 _new_state:
-		ld		e,a
-		ld		a,l
-		;
-		; E = Fs
-		; C = Is
-		; H = d = state // M
-		; A = r = state & (M - 1)
-		;
-		; Input:
-		;  H = value 1
-		;  E = value 2
-		;
-		; Return:
-		;  HL = result
-		;  E remains unchanged
-		;  D = 0
-		;
-_umulHxE_HL:
-		ld		b,8
-		ld		l,d
-_mul_loop:
-		add		hl,hl
-		jr nc,	$+3
-		add		hl,de
-		djnz	_mul_loop
+		; new_state = d * Fs - Is + r
+		;           = d * Fs + (r - Is)
+		ex		de,hl					; 1
+		ld		e,a						; 1
+		ld		d,b						; 1
+		ld		a,l						; 1
+		ld		l,b						; 1 -> 20
+		;  H = (d = state // M)
+		;  L = 0
+		; DE = Fs
+		; BC = Is
+		;  A = r = state & (M - 1)
+		ld		b,8						; 2
+_umulDxL_HL:
+		add		hl,hl					; 1
+		jr nc,	$+3						; 2
+		add		hl,de					; 1
+		djnz	_umulDxL_HL				; 2
 		; C_flag is always cleared
-		; new_state = HL = d * Fs - Is + r
-		ld		e,c
-		sbc		hl,de			; Always clears C_flag
-		ld		e,a
-		add		hl,de			; May set C_flag
-		pop		de
+		sbc		hl,bc
+		ld		c,a
+		add		hl,bc					; 1
+		ex		de,hl					; 1
+		pop		hl						; 1
 
 		; while (new_state < L_BIT_LOW)
 		; L_BIT_LOW == 256
-		ld		a,h
-		and		a
-		jr nz,	_end_while
-		ld		a,(de)
-		dec		de
-		ld		h,l
-		ld		l,a
+		ld		a,d						; 1
+		and		a						; 1
+		jr nz,	_end_while				; 2
+		ld		d,e						; 1
+		ld		e,(hl)					; 1
+		dec		hl						; 1
 _end_while:
-		pop		af
-		ret
-
+		pop		af						; 1
+		ret								; 1 -> 43
 
 ;-----------------------------------------------------------------------------
 ; Input:
