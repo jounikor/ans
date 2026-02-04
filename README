@@ -1,8 +1,11 @@
 (c) 2025-26 Jouni 'Mr.Spiv' Korhonen
 
-Version 0.2
+Version 0.3
 
 NOTE! Testing has been minimal so there MAY BE bugs around.
+
+Visit my blog about these ANS experiments:
+https://spiverman.blogspot.com/2026/02/ans-experimentations-for-8-bit-systems.html
 
 The three following Python3 programs implement my ANS ancoders/decoders. These
 are simple and should be very readable, since they were implemented for my
@@ -12,6 +15,8 @@ ANS concept self-learning purposes.
   tans.py - An example implementation of tANS encoder and decoder.
   rabs.py - An example implementation of a binary alphabet rANS
             encoder and decoder with a simple adaptive propability model.
+			The encoder allows 1 to 8 bits input/output during state
+			renormalization.
 
 The following C++ (v11 should be enough) program implements tANS encoder
 and decoder template classes. These classes are purposely designed to mimic
@@ -27,16 +32,21 @@ low spec target platforms - read 8-bit systems.
                      I have used to encode tANS symbol frequencies into the
 					 output file. 
 
-
 The following Z80 assembly file implements a tANS decoder and a required
 function for building L- and Y-value decoding tables. The implementation 
 currently is 84 bytes, excluding L- and Y-tables.
 
   z80_tans_decoder.asm
 
-The following z80 assembly file imolements a rABS decoder and a simple
+The following z80 assembly file implements a rABS decoder and a simple
 dynamic model for propabilities. The implementation currently is 88
 bytes, and nood for additional tables (due to simple context model).
 
   z80_rabs_decoder.asm
+
+There's also a byte-wise version of rABS Z80 decoder. This is smaller
+and faster than basic 1-bit at time decoder.
+
+  z80_rabs_byte_decoder.asm
+
 
